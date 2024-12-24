@@ -107,14 +107,16 @@ app.put("/api/data", checkJwt, async (req, res, next) => {
       }
     ).then((res) => res.json());
 
-    const { additional_info } = req.body;
+    const { name, email, additional_info } = req.body;
 
     const result = await pool.query(
       `UPDATE user_profiles 
-       SET additional_info = $1
-       WHERE auth0_id = $2
+       SET name = COALESCE($1, name),
+           email = COALESCE($2, email),
+           additional_info = COALESCE($3, additional_info)
+       WHERE auth0_id = $4
        RETURNING *`,
-      [additional_info, sub]
+      [name, email, additional_info, sub]
     );
 
     res.json({
