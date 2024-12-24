@@ -10,6 +10,27 @@ import {
 } from "@mui/material";
 
 function ProfileForm({ isEditing, user, editedData, setEditedData, userInfo }) {
+  // Validation functions
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validateName = (name) => {
+    return name.trim().length >= 2; // Minimum 2 characters
+  };
+
+  // Error states
+  const nameError =
+    isEditing && !validateName(editedData.name)
+      ? "Name must be at least 2 characters long"
+      : "";
+
+  const emailError =
+    isEditing && !validateEmail(editedData.email)
+      ? "Please enter a valid email address"
+      : "";
+
   return (
     <TableContainer component={Paper}>
       <Table>
@@ -30,6 +51,9 @@ function ProfileForm({ isEditing, user, editedData, setEditedData, userInfo }) {
                   onChange={(e) =>
                     setEditedData({ ...editedData, name: e.target.value })
                   }
+                  error={!!nameError}
+                  helperText={nameError}
+                  required
                 />
               ) : (
                 user?.name
@@ -52,6 +76,10 @@ function ProfileForm({ isEditing, user, editedData, setEditedData, userInfo }) {
                   onChange={(e) =>
                     setEditedData({ ...editedData, email: e.target.value })
                   }
+                  error={!!emailError}
+                  helperText={emailError}
+                  required
+                  type="email"
                 />
               ) : (
                 user?.email

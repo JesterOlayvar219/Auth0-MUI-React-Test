@@ -58,9 +58,8 @@ router.put("/data", checkJwt, async (req, res) => {
     ).then((res) => res.json());
 
     const { name, email, additional_info } = req.body;
-    console.log("📝 Updating profile for user:", sub);
-    console.log("📝 Update data:", { name, email, additional_info });
 
+    // First update the database
     const result = await pool.query(
       `UPDATE user_profiles 
        SET name = COALESCE($1, name),
@@ -71,11 +70,20 @@ router.put("/data", checkJwt, async (req, res) => {
       [name, email, additional_info, sub]
     );
 
-    console.log("✅ Profile updated successfully:", result.rows[0]);
+    // Then fetch the latest data to ensure consistency
+    const updatedResult = await pool.query(
+      "SELECT * FROM user_profiles WHERE auth0_id = $1",
+      [sub]
+    );
+
+    const updatedUser = updatedResult.rows[0];
 
     res.json({
       message: "Profile updated successfully",
-      user: result.rows[0],
+      user: {
+        ...updatedUser,
+        sub: sub, // Include Auth0 sub to maintain consistency
+      },
     });
   } catch (error) {
     console.error("Error in PUT /api/data:", error);

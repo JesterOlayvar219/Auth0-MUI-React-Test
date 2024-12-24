@@ -17,6 +17,22 @@ function Profile() {
     email: "",
   });
 
+  const fetchUserData = async () => {
+    try {
+      const response = await fetch("http://localhost:3000/api/data", {
+        headers: {
+          Authorization: `Bearer ${await getAccessTokenSilently()}`,
+        },
+      });
+      const data = await response.json();
+      setUserData(data);
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (userData?.user) {
       setEditedData({
@@ -27,22 +43,6 @@ function Profile() {
   }, [userData, user]);
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const response = await fetch("http://localhost:3000/api/data", {
-          headers: {
-            Authorization: `Bearer ${await getAccessTokenSilently()}`,
-          },
-        });
-        const data = await response.json();
-        setUserData(data);
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchUserData();
   }, [getAccessTokenSilently]);
 
@@ -61,11 +61,14 @@ function Profile() {
         }),
       });
       const data = await response.json();
+
       setUserData(data);
       setEditedData({
         name: data.user.name,
         email: data.user.email,
       });
+
+      await fetchUserData();
     } catch (error) {
       console.error("Error updating profile:", error);
     }
@@ -80,6 +83,15 @@ function Profile() {
   };
 
   const handleSave = async () => {
+    // Validate before saving
+    const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editedData.email);
+    const isNameValid = editedData.name.trim().length >= 2;
+
+    if (!isEmailValid || !isNameValid) {
+      // You might want to show an error message to the user here
+      return;
+    }
+
     try {
       await updateProfile({});
       setIsEditing(false);
