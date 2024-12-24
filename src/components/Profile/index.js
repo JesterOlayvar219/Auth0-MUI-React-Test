@@ -46,7 +46,7 @@ function Profile() {
     fetchUserData();
   }, [getAccessTokenSilently]);
 
-  const updateProfile = async (additionalInfo) => {
+  const updateProfile = async () => {
     try {
       const response = await fetch("http://localhost:3000/api/data", {
         method: "PUT",
@@ -57,7 +57,6 @@ function Profile() {
         body: JSON.stringify({
           name: editedData.name,
           email: editedData.email,
-          additional_info: additionalInfo,
         }),
       });
       const data = await response.json();
@@ -88,12 +87,11 @@ function Profile() {
     const isNameValid = editedData.name.trim().length >= 2;
 
     if (!isEmailValid || !isNameValid) {
-      // You might want to show an error message to the user here
       return;
     }
 
     try {
-      await updateProfile({});
+      await updateProfile();
       setIsEditing(false);
     } catch (error) {
       console.error("Error saving profile:", error);

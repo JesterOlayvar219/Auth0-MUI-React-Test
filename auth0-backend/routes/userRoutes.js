@@ -57,32 +57,41 @@ router.put("/data", checkJwt, async (req, res) => {
       }
     ).then((res) => res.json());
 
-    const { name, email, additional_info } = req.body;
+    const { name, email } = req.body;
 
     // First update the database
     const result = await pool.query(
       `UPDATE user_profiles 
        SET name = COALESCE($1, name),
-           email = COALESCE($2, email),
-           additional_info = COALESCE($3, additional_info)
-       WHERE auth0_id = $4
+           email = COALESCE($2, email)
+       WHERE auth0_id = $3
        RETURNING *`,
-      [name, email, additional_info, sub]
+      [name, email, sub]
     );
 
-    // Then fetch the latest data to ensure consistency
-    const updatedResult = await pool.query(
-      "SELECT * FROM user_profiles WHERE auth0_id = $1",
-      [sub]
-    );
+    // Check if the update affected any rows
+    if (result.rows.length === 0) {
+      // If no rows were updated, try to insert the user
+      const insertResult = await pool.query(
+        "INSERT INTO user_profiles (auth0_id, name, email) VALUES ($1, $2, $3) RETURNING *",
+        [sub, name, email]
+      );
 
-    const updatedUser = updatedResult.rows[0];
+      return res.json({
+        message: "Profile created successfully",
+        user: {
+          ...insertResult.rows[0],
+          sub: sub,
+        },
+      });
+    }
 
+    // If update was successful, return the updated data
     res.json({
       message: "Profile updated successfully",
       user: {
-        ...updatedUser,
-        sub: sub, // Include Auth0 sub to maintain consistency
+        ...result.rows[0],
+        sub: sub,
       },
     });
   } catch (error) {
