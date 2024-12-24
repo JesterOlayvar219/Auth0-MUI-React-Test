@@ -18,6 +18,15 @@ function Profile() {
   });
 
   useEffect(() => {
+    if (userData?.user) {
+      setEditedData({
+        name: userData.user.name || user?.name,
+        email: userData.user.email || user?.email,
+      });
+    }
+  }, [userData, user]);
+
+  useEffect(() => {
     const fetchUserData = async () => {
       try {
         const response = await fetch("http://localhost:3000/api/data", {
@@ -46,11 +55,17 @@ function Profile() {
           Authorization: `Bearer ${await getAccessTokenSilently()}`,
         },
         body: JSON.stringify({
+          name: editedData.name,
+          email: editedData.email,
           additional_info: additionalInfo,
         }),
       });
       const data = await response.json();
       setUserData(data);
+      setEditedData({
+        name: data.user.name,
+        email: data.user.email,
+      });
     } catch (error) {
       console.error("Error updating profile:", error);
     }
@@ -58,18 +73,15 @@ function Profile() {
 
   const handleEdit = () => {
     setEditedData({
-      name: user?.name,
-      email: user?.email,
+      name: userData?.user?.name || user?.name,
+      email: userData?.user?.email || user?.email,
     });
     setIsEditing(true);
   };
 
   const handleSave = async () => {
     try {
-      await updateProfile({
-        name: editedData.name,
-        email: editedData.email,
-      });
+      await updateProfile({});
       setIsEditing(false);
     } catch (error) {
       console.error("Error saving profile:", error);
@@ -79,8 +91,8 @@ function Profile() {
   const handleCancel = () => {
     setIsEditing(false);
     setEditedData({
-      name: user?.name,
-      email: user?.email,
+      name: userData?.user?.name || user?.name,
+      email: userData?.user?.email || user?.email,
     });
   };
 
@@ -88,8 +100,8 @@ function Profile() {
 
   const userInfo = [
     { label: "User ID", value: user?.sub },
-    { label: "Name", value: user?.name },
-    { label: "Email", value: user?.email },
+    { label: "Name", value: userData?.user?.name || user?.name },
+    { label: "Email", value: userData?.user?.email || user?.email },
     { label: "Email Verified", value: user?.email_verified ? "Yes" : "No" },
   ];
 
@@ -102,10 +114,13 @@ function Profile() {
           onSave={handleSave}
           onCancel={handleCancel}
         />
-        <ProfileAvatar picture={user?.picture} name={user?.name} />
+        <ProfileAvatar
+          picture={userData?.user?.picture || user?.picture}
+          name={userData?.user?.name || user?.name}
+        />
         <ProfileForm
           isEditing={isEditing}
-          user={user}
+          user={userData?.user || user}
           editedData={editedData}
           setEditedData={setEditedData}
           userInfo={userInfo}
