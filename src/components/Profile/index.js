@@ -100,8 +100,6 @@ function Profile() {
 
   const userInfo = [
     { label: "User ID", value: user?.sub },
-    { label: "Name", value: userData?.user?.name || user?.name },
-    { label: "Email", value: userData?.user?.email || user?.email },
     { label: "Email Verified", value: user?.email_verified ? "Yes" : "No" },
   ];
 
