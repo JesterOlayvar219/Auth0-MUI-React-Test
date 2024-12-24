@@ -12,12 +12,23 @@ import {
   Box,
   CircularProgress,
   Typography,
+  Button,
+  TextField,
+  IconButton,
 } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import SaveIcon from "@mui/icons-material/Save";
+import CancelIcon from "@mui/icons-material/Cancel";
 
 function Profile() {
   const { user, getAccessTokenSilently } = useAuth0();
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedData, setEditedData] = useState({
+    name: "",
+    email: "",
+  });
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -58,6 +69,34 @@ function Profile() {
     }
   };
 
+  const handleEdit = () => {
+    setEditedData({
+      name: user?.name,
+      email: user?.email,
+    });
+    setIsEditing(true);
+  };
+
+  const handleSave = async () => {
+    try {
+      await updateProfile({
+        name: editedData.name,
+        email: editedData.email,
+      });
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error saving profile:", error);
+    }
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    setEditedData({
+      name: user?.name,
+      email: user?.email,
+    });
+  };
+
   if (loading) {
     return (
       <Box
@@ -81,9 +120,32 @@ function Profile() {
   return (
     <Container maxWidth="md">
       <Box sx={{ mt: 4, mb: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Profile Information
-        </Typography>
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          mb={2}
+        >
+          <Typography variant="h4">Profile Information</Typography>
+          {!isEditing ? (
+            <Button
+              startIcon={<EditIcon />}
+              variant="contained"
+              onClick={handleEdit}
+            >
+              Edit Profile
+            </Button>
+          ) : (
+            <Box>
+              <IconButton color="primary" onClick={handleSave}>
+                <SaveIcon />
+              </IconButton>
+              <IconButton color="error" onClick={handleCancel}>
+                <CancelIcon />
+              </IconButton>
+            </Box>
+          )}
+        </Box>
 
         <Box display="flex" justifyContent="center" mb={4}>
           <Avatar
@@ -96,6 +158,50 @@ function Profile() {
         <TableContainer component={Paper}>
           <Table>
             <TableBody>
+              <TableRow>
+                <TableCell
+                  component="th"
+                  scope="row"
+                  sx={{ width: "30%", fontWeight: "bold" }}
+                >
+                  Name
+                </TableCell>
+                <TableCell>
+                  {isEditing ? (
+                    <TextField
+                      fullWidth
+                      value={editedData.name}
+                      onChange={(e) =>
+                        setEditedData({ ...editedData, name: e.target.value })
+                      }
+                    />
+                  ) : (
+                    user?.name
+                  )}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell
+                  component="th"
+                  scope="row"
+                  sx={{ width: "30%", fontWeight: "bold" }}
+                >
+                  Email
+                </TableCell>
+                <TableCell>
+                  {isEditing ? (
+                    <TextField
+                      fullWidth
+                      value={editedData.email}
+                      onChange={(e) =>
+                        setEditedData({ ...editedData, email: e.target.value })
+                      }
+                    />
+                  ) : (
+                    user?.email
+                  )}
+                </TableCell>
+              </TableRow>
               {userInfo.map(
                 (row) =>
                   row.value && (
