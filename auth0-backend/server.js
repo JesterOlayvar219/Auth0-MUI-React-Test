@@ -3,6 +3,8 @@ require("dotenv").config();
 const cors = require("cors");
 const { auth } = require("express-oauth2-jwt-bearer");
 const { Pool } = require("pg");
+const fetch = (...args) =>
+  import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
 // PostgreSQL connection setup
 const pool = new Pool({
@@ -12,6 +14,46 @@ const pool = new Pool({
   password: process.env.DB_PASSWORD,
   port: process.env.DB_PORT,
 });
+
+// Database connection check function
+const checkDatabaseConnection = async () => {
+  let client;
+  try {
+    client = await pool.connect();
+    console.log("✅ Successfully connected to PostgreSQL database!");
+
+    // Test query
+    const result = await client.query("SELECT NOW()");
+    console.log("📅 Database time:", result.rows[0].now);
+
+    // Check if user_profiles table exists
+    const tableExists = await client.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'user_profiles'
+      );
+    `);
+
+    if (!tableExists.rows[0].exists) {
+      console.log("Creating user_profiles table...");
+      await initDB();
+    } else {
+      console.log("✅ user_profiles table already exists");
+      const userCount = await client.query(
+        "SELECT COUNT(*) FROM user_profiles"
+      );
+      console.log(`📊 Current number of users: ${userCount.rows[0].count}`);
+    }
+  } catch (err) {
+    console.error("❌ Database connection error:", err);
+    console.error("Check your .env file and make sure PostgreSQL is running!");
+    process.exit(1);
+  } finally {
+    if (client) {
+      client.release();
+    }
+  }
+};
 
 // Auth0 middleware setup
 const checkJwt = auth({
@@ -46,15 +88,14 @@ const initDB = async () => {
         additional_info JSONB DEFAULT '{}'::jsonb
       );
     `);
-    console.log("Database initialized successfully");
+    console.log("✅ Database table initialized successfully");
   } catch (error) {
-    console.error("Database initialization error:", error);
+    console.error("❌ Database initialization error:", error);
+    throw error;
   }
 };
 
-initDB();
-
-// Get user profile data
+// Routes
 app.get("/api/data", checkJwt, async (req, res) => {
   try {
     // Fetch user info from Auth0
@@ -91,12 +132,16 @@ app.get("/api/data", checkJwt, async (req, res) => {
       },
     });
   } catch (error) {
-    next(error);
+    console.error("Error in GET /api/data:", error);
+    res.status(500).json({
+      message: "Error retrieving profile data",
+      error: error.message,
+    });
   }
 });
 
 // Update user profile
-app.put("/api/data", checkJwt, async (req, res, next) => {
+app.put("/api/data", checkJwt, async (req, res) => {
   try {
     const { sub } = await fetch(
       `https://${process.env.AUTH0_DOMAIN}/userinfo`,
@@ -108,6 +153,8 @@ app.put("/api/data", checkJwt, async (req, res, next) => {
     ).then((res) => res.json());
 
     const { name, email, additional_info } = req.body;
+    console.log("📝 Updating profile for user:", sub);
+    console.log("📝 Update data:", { name, email, additional_info });
 
     const result = await pool.query(
       `UPDATE user_profiles 
@@ -119,24 +166,36 @@ app.put("/api/data", checkJwt, async (req, res, next) => {
       [name, email, additional_info, sub]
     );
 
+    console.log("✅ Profile updated successfully:", result.rows[0]);
+
     res.json({
       message: "Profile updated successfully",
       user: result.rows[0],
     });
   } catch (error) {
-    next(error);
+    console.error("Error in PUT /api/data:", error);
+    res.status(500).json({
+      message: "Error updating profile",
+      error: error.message,
+    });
   }
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(err.status || 500).json({
-    message: err.message || "Internal Server Error",
-    error: process.env.NODE_ENV === "development" ? err : {},
-  });
-});
+// Start server function
+const startServer = async () => {
+  try {
+    // Check database connection before starting the server
+    await checkDatabaseConnection();
 
-app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
-});
+    // Start the server
+    app.listen(port, () => {
+      console.log(`🚀 Server running on http://localhost:${port}`);
+    });
+  } catch (error) {
+    console.error("Failed to start server:", error);
+    process.exit(1);
+  }
+};
+
+// Start the server
+startServer();
