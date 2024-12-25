@@ -1,6 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
+import { useDispatch, useSelector } from "react-redux";
 import { Container, Box } from "@mui/material";
+import {
+  setProfileEditing,
+  setProfileData,
+  updateProfile,
+} from "../../actions/profile";
 import ProfileHeader from "./ProfileHeader";
 import ProfileAvatar from "./ProfileAvatar";
 import ProfileForm from "./ProfileForm";
@@ -9,13 +15,10 @@ import LoadingSpinner from "./LoadingSpinner";
 
 function Profile() {
   const { user, getAccessTokenSilently } = useAuth0();
-  const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedData, setEditedData] = useState({
-    name: "",
-    email: "",
-  });
+  const dispatch = useDispatch();
+  const { isEditing, userData, editedData, loading } = useSelector(
+    (state) => state.profile
+  );
 
   const fetchUserData = async () => {
     try {
@@ -25,85 +28,35 @@ function Profile() {
         },
       });
       const data = await response.json();
-      setUserData(data);
+      dispatch(setProfileData(data));
     } catch (error) {
       console.error("Error fetching user data:", error);
-    } finally {
-      setLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (userData?.user) {
-      setEditedData({
-        name: userData.user.name || user?.name,
-        email: userData.user.email || user?.email,
-      });
-    }
-  }, [userData, user]);
 
   useEffect(() => {
     fetchUserData();
-  }, [getAccessTokenSilently]);
-
-  const updateProfile = async () => {
-    try {
-      const response = await fetch("http://localhost:3000/api/data", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${await getAccessTokenSilently()}`,
-        },
-        body: JSON.stringify({
-          name: editedData.name,
-          email: editedData.email,
-        }),
-      });
-      const data = await response.json();
-
-      setUserData(data);
-      setEditedData({
-        name: data.user.name,
-        email: data.user.email,
-      });
-
-      await fetchUserData();
-    } catch (error) {
-      console.error("Error updating profile:", error);
-    }
-  };
+  }, [getAccessTokenSilently, dispatch]);
 
   const handleEdit = () => {
-    setEditedData({
-      name: userData?.user?.name || user?.name,
-      email: userData?.user?.email || user?.email,
-    });
-    setIsEditing(true);
+    dispatch(setProfileEditing(true));
   };
 
   const handleSave = async () => {
-    // Validate before saving
-    const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editedData.email);
-    const isNameValid = editedData.name.trim().length >= 2;
-
-    if (!isEmailValid || !isNameValid) {
-      return;
-    }
-
     try {
-      await updateProfile();
-      setIsEditing(false);
+      await dispatch(updateProfile(editedData, await getAccessTokenSilently()));
+      dispatch(setProfileEditing(false));
     } catch (error) {
       console.error("Error saving profile:", error);
     }
   };
 
   const handleCancel = () => {
-    setIsEditing(false);
-    setEditedData({
-      name: userData?.user?.name || user?.name,
-      email: userData?.user?.email || user?.email,
-    });
+    dispatch(setProfileEditing(false));
+  };
+
+  const handleFormChange = (newData) => {
+    dispatch(setProfileData({ ...userData, user: newData }));
   };
 
   if (loading) return <LoadingSpinner />;
@@ -130,7 +83,7 @@ function Profile() {
           isEditing={isEditing}
           user={userData?.user || user}
           editedData={editedData}
-          setEditedData={setEditedData}
+          setEditedData={handleFormChange}
           userInfo={userInfo}
         />
         <ServerMessage message={userData?.message} />
