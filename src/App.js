@@ -1,79 +1,22 @@
 import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
-import Dashboard from "./dashboard";
-import {
-  Container,
-  Box,
-  Typography,
-  Button,
-  AppBar,
-  Toolbar,
-} from "@mui/material";
-import { useNavigate, Routes, Route, Navigate } from "react-router-dom";
 
 import Profile from "./components/Profile";
-import ProtectedRoute from "./components/ProtectedRoute";
+import ProtectedRoute from "./components/common/ProtectedRoute";
+import Navbar from "./components/Navbar";
+import Home from "./components/Home";
+import Auth0Sync from "./components/common/Auth0Sync";
+import LoginRedirect from "./components/common/LoginRedirect";
 
 const App = () => {
-  const { loginWithRedirect, logout, user, isAuthenticated } = useAuth0();
-  const navigate = useNavigate();
-
   return (
     <>
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 0, mr: 4 }}>
-            Auth0 App
-          </Typography>
-          {isAuthenticated && (
-            <>
-              <Button color="inherit" onClick={() => navigate("/profile")}>
-                Profile
-              </Button>
-              <Box sx={{ flexGrow: 1 }} />
-              <Button
-                color="inherit"
-                onClick={() =>
-                  logout({
-                    returnTo: "https://localhost:5000",
-                    logoutParams: {
-                      returnTo: "https://localhost:5000",
-                    },
-                  })
-                }
-              >
-                Logout
-              </Button>
-            </>
-          )}
-        </Toolbar>
-      </AppBar>
+      <Auth0Sync />
+      <Navbar />
       <Routes>
-        <Route
-          path="/"
-          element={
-            <Container maxWidth="lg">
-              <Box sx={{ mt: 4, textAlign: "center" }}>
-                {!isAuthenticated ? (
-                  <Button
-                    variant="contained"
-                    size="large"
-                    onClick={loginWithRedirect}
-                  >
-                    Login
-                  </Button>
-                ) : (
-                  <Box>
-                    <Typography variant="h4" gutterBottom>
-                      Welcome, {user.name}
-                    </Typography>
-                    <Dashboard />
-                  </Box>
-                )}
-              </Box>
-            </Container>
-          }
-        />
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<LoginRedirect />} />
         <Route
           path="/profile"
           element={
@@ -82,7 +25,7 @@ const App = () => {
             </ProtectedRoute>
           }
         />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </>
   );
