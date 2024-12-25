@@ -9,9 +9,10 @@ import {
   AppBar,
   Toolbar,
 } from "@mui/material";
-import { Link, useNavigate, Routes, Route } from "react-router-dom";
+import { useNavigate, Routes, Route, Navigate } from "react-router-dom";
 
 import Profile from "./components/Profile";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const App = () => {
   const { loginWithRedirect, logout, user, isAuthenticated } = useAuth0();
@@ -32,7 +33,14 @@ const App = () => {
               <Box sx={{ flexGrow: 1 }} />
               <Button
                 color="inherit"
-                onClick={() => logout({ returnTo: "https://localhost:5000" })}
+                onClick={() =>
+                  logout({
+                    returnTo: "https://localhost:5000",
+                    logoutParams: {
+                      returnTo: "https://localhost:5000",
+                    },
+                  })
+                }
               >
                 Logout
               </Button>
@@ -40,7 +48,6 @@ const App = () => {
           )}
         </Toolbar>
       </AppBar>
-
       <Routes>
         <Route
           path="/"
@@ -67,7 +74,15 @@ const App = () => {
             </Container>
           }
         />
-        <Route path="/profile" element={<Profile />} />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
   );
