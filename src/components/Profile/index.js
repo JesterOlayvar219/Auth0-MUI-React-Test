@@ -1,4 +1,4 @@
-import React, { useEffect, memo } from "react";
+import React, { useEffect, memo, useCallback } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useDispatch, useSelector } from "react-redux";
 import { Container, Box } from "@mui/material";
@@ -23,7 +23,7 @@ function Profile() {
     (state) => state.profile
   );
 
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
     try {
       const token = await getAccessTokenSilently();
       setAuthToken(token);
@@ -32,11 +32,11 @@ function Profile() {
     } catch (error) {
       console.error("Error fetching user data:", error);
     }
-  };
+  }, [getAccessTokenSilently, dispatch]);
 
   useEffect(() => {
     fetchUserData();
-  }, [getAccessTokenSilently, dispatch]);
+  }, [getAccessTokenSilently, dispatch, fetchUserData]);
 
   if (loading) return <LoadingSpinner />;
 
