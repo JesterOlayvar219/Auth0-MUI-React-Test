@@ -34,9 +34,13 @@ function Profile() {
     }
   };
 
-  useEffect(() => {
-    fetchUserData();
-  }, [getAccessTokenSilently, dispatch]);
+  useEffect(
+    () => {
+      fetchUserData();
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [getAccessTokenSilently, dispatch]
+  );
 
   const handleEdit = () => {
     dispatch(setProfileEditing(true));

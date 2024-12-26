@@ -1,7 +1,7 @@
 import React from "react";
 import { Container, Box, Typography, Button } from "@mui/material";
 import { useAuth0 } from "@auth0/auth0-react";
-import Dashboard from "../dashboard";
+import Dashboard from "./dashboard";
 
 const Home = () => {
   const { loginWithRedirect, user, isAuthenticated } = useAuth0();

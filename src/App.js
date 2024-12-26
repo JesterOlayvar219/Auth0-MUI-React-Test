@@ -1,6 +1,5 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { useAuth0 } from "@auth0/auth0-react";
 
 import Profile from "./components/Profile";
 import ProtectedRoute from "./components/common/ProtectedRoute";
