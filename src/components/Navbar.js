@@ -16,7 +16,7 @@ const Navbar = () => {
     dispatch(logout());
     auth0Logout({
       logoutParams: {
-        returnTo: "https://localhost:5000",
+        returnTo: window.location.origin,
       },
     });
   };

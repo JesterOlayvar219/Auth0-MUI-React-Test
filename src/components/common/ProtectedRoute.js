@@ -3,14 +3,17 @@ import { Navigate } from "react-router-dom";
 import LoadingSpinner from "../Profile/LoadingSpinner";
 
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth0();
+  const { isAuthenticated, isLoading, loginWithRedirect } = useAuth0();
 
   if (isLoading) {
     return <LoadingSpinner />;
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
+    loginWithRedirect({
+      appState: { returnTo: window.location.pathname },
+    });
+    return null;
   }
 
   return children;
