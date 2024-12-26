@@ -12,6 +12,8 @@ import ProfileAvatar from "./ProfileAvatar";
 import ProfileForm from "./ProfileForm";
 import ServerMessage from "./ServerMessage";
 import LoadingSpinner from "./LoadingSpinner";
+import { profileService } from "../../services/profileService";
+import { setAuthToken } from "../../services/api";
 
 function Profile() {
   const { user, getAccessTokenSilently } = useAuth0();
@@ -22,12 +24,9 @@ function Profile() {
 
   const fetchUserData = async () => {
     try {
-      const response = await fetch("http://localhost:3000/api/data", {
-        headers: {
-          Authorization: `Bearer ${await getAccessTokenSilently()}`,
-        },
-      });
-      const data = await response.json();
+      const token = await getAccessTokenSilently();
+      setAuthToken(token);
+      const data = await profileService.fetchUserData();
       dispatch(setProfileData(data));
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -48,7 +47,7 @@ function Profile() {
 
   const handleSave = async () => {
     try {
-      await dispatch(updateProfile(editedData, await getAccessTokenSilently()));
+      await dispatch(updateProfile(editedData));
       dispatch(setProfileEditing(false));
     } catch (error) {
       console.error("Error saving profile:", error);

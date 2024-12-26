@@ -5,6 +5,7 @@ import {
   SET_PROFILE_EDITING,
   SET_PROFILE_DATA,
 } from "./types";
+import { profileService } from "../services/profileService";
 
 export const setProfileEditing = (isEditing) => ({
   type: SET_PROFILE_EDITING,
@@ -16,25 +17,15 @@ export const setProfileData = (data) => ({
   payload: data,
 });
 
-export const updateProfile = (profileData, accessToken) => async (dispatch) => {
+export const updateProfile = (profileData) => async (dispatch) => {
   dispatch({ type: UPDATE_PROFILE_REQUEST });
 
   try {
-    const response = await fetch("http://localhost:3000/api/data", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify(profileData),
-    });
-
-    const data = await response.json();
+    const data = await profileService.updateUserProfile(profileData);
     dispatch({
       type: UPDATE_PROFILE_SUCCESS,
       payload: data,
     });
-
     return data;
   } catch (error) {
     dispatch({
