@@ -1,13 +1,15 @@
 import React, { memo, useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { updateProfile, setProfileEditing } from "../../actions/profile";
-import { TextField, Button, Grid } from "@mui/material";
+import { TextField, Button, Grid, CircularProgress } from "@mui/material";
 
 const ProfileForm = memo(({ isEditing, initialData, userInfo }) => {
   const [formData, setFormData] = useState(initialData);
+  const [isSaving, setIsSaving] = useState(false);
   const dispatch = useDispatch();
 
   useEffect(() => {
+    console.log("Initial Data:", initialData);
     setFormData(initialData);
   }, [initialData]);
 
@@ -20,11 +22,14 @@ const ProfileForm = memo(({ isEditing, initialData, userInfo }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSaving(true);
     try {
       await dispatch(updateProfile(formData));
-      dispatch(setProfileEditing(false)); // Disable edit mode after successful update
+      dispatch(setProfileEditing(false));
     } catch (error) {
       console.error("Error updating profile:", error);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -86,8 +91,14 @@ const ProfileForm = memo(({ isEditing, initialData, userInfo }) => {
         {/* Save button only shows when editing */}
         {isEditing && (
           <Grid item xs={12}>
-            <Button type="submit" variant="contained" color="primary" fullWidth>
-              Save Changes
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              fullWidth
+              disabled={isSaving}
+            >
+              {isSaving ? <CircularProgress size={24} /> : "Save Changes"}
             </Button>
           </Grid>
         )}

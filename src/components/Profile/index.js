@@ -7,7 +7,6 @@ import ProfileHeader from "./ProfileHeader";
 import ProfileAvatar from "./ProfileAvatar";
 import ProfileForm from "./ProfileForm";
 import ServerMessage from "./ServerMessage";
-import LoadingSpinner from "./LoadingSpinner";
 import { profileService } from "../../services/profileService";
 import { setAuthToken } from "../../services/api";
 
@@ -37,8 +36,6 @@ function Profile() {
   useEffect(() => {
     fetchUserData();
   }, [getAccessTokenSilently, dispatch, fetchUserData]);
-
-  if (loading) return <LoadingSpinner />;
 
   const userInfo = [
     { label: "User ID", value: user?.sub },

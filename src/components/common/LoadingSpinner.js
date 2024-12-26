@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, CircularProgress } from "@mui/material";
 
-function LoadingSpinner() {
+const LoadingSpinner = ({ size = 24 }) => {
   return (
     <Box
       display="flex"
@@ -9,9 +9,9 @@ function LoadingSpinner() {
       alignItems="center"
       minHeight="400px"
     >
-      <CircularProgress />
+      <CircularProgress size={size} />
     </Box>
   );
-}
+};
 
 export default LoadingSpinner;
