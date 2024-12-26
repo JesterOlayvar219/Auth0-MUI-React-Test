@@ -18,9 +18,7 @@ const MemoizedServerMessage = memo(ServerMessage);
 function Profile() {
   const { user, getAccessTokenSilently } = useAuth0();
   const dispatch = useDispatch();
-  const { isEditing, userData, loading } = useSelector(
-    (state) => state.profile
-  );
+  const { isEditing, userData } = useSelector((state) => state.profile);
 
   const fetchUserData = useCallback(async () => {
     try {
