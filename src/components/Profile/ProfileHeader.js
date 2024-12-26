@@ -1,34 +1,34 @@
 import React from "react";
-import { Box, Typography, Button, IconButton } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
-import SaveIcon from "@mui/icons-material/Save";
-import CancelIcon from "@mui/icons-material/Cancel";
+import { useDispatch } from "react-redux";
+import { Box, Typography, Button } from "@mui/material";
+import { setProfileEditing } from "../../actions/profile";
 
-function ProfileHeader({ isEditing, onEdit, onSave, onCancel }) {
+const ProfileHeader = ({ isEditing }) => {
+  const dispatch = useDispatch();
+
+  const handleEditToggle = () => {
+    dispatch(setProfileEditing(!isEditing));
+  };
+
   return (
     <Box
-      display="flex"
-      alignItems="center"
-      justifyContent="space-between"
-      mb={2}
+      sx={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        mb: 3,
+      }}
     >
-      <Typography variant="h4">Profile Information</Typography>
-      {!isEditing ? (
-        <Button startIcon={<EditIcon />} variant="contained" onClick={onEdit}>
-          Edit Profile
-        </Button>
-      ) : (
-        <Box>
-          <IconButton color="primary" onClick={onSave}>
-            <SaveIcon />
-          </IconButton>
-          <IconButton color="error" onClick={onCancel}>
-            <CancelIcon />
-          </IconButton>
-        </Box>
-      )}
+      <Typography variant="h4">Profile</Typography>
+      <Button
+        variant="contained"
+        color={isEditing ? "secondary" : "primary"}
+        onClick={handleEditToggle}
+      >
+        {isEditing ? "Cancel" : "Edit Profile"}
+      </Button>
     </Box>
   );
-}
+};
 
 export default ProfileHeader;

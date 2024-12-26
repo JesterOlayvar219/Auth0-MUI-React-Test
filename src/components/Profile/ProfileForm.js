@@ -1,15 +1,33 @@
-import React from "react";
-import {
-  TableContainer,
-  Paper,
-  Table,
-  TableBody,
-  TableRow,
-  TableCell,
-  TextField,
-} from "@mui/material";
+import React, { memo, useState, useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { updateProfile, setProfileEditing } from "../../actions/profile";
+import { TextField, Button, Grid } from "@mui/material";
 
-function ProfileForm({ isEditing, user, editedData, setEditedData, userInfo }) {
+const ProfileForm = memo(({ isEditing, initialData, userInfo }) => {
+  const [formData, setFormData] = useState(initialData);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    setFormData(initialData);
+  }, [initialData]);
+
+  const handleChange = (field) => (event) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: event.target.value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await dispatch(updateProfile(formData));
+      dispatch(setProfileEditing(false)); // Disable edit mode after successful update
+    } catch (error) {
+      console.error("Error updating profile:", error);
+    }
+  };
+
   // Validation functions
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -22,89 +40,60 @@ function ProfileForm({ isEditing, user, editedData, setEditedData, userInfo }) {
 
   // Error states
   const nameError =
-    isEditing && !validateName(editedData.name)
+    isEditing && !validateName(formData.name)
       ? "Name must be at least 2 characters long"
       : "";
 
   const emailError =
-    isEditing && !validateEmail(editedData.email)
+    isEditing && !validateEmail(formData.email)
       ? "Please enter a valid email address"
       : "";
 
   return (
-    <TableContainer component={Paper}>
-      <Table>
-        <TableBody>
-          <TableRow>
-            <TableCell
-              component="th"
-              scope="row"
-              sx={{ width: "30%", fontWeight: "bold" }}
-            >
-              Name
-            </TableCell>
-            <TableCell>
-              {isEditing ? (
-                <TextField
-                  fullWidth
-                  value={editedData.name}
-                  onChange={(e) =>
-                    setEditedData({ ...editedData, name: e.target.value })
-                  }
-                  error={!!nameError}
-                  helperText={nameError}
-                  required
-                />
-              ) : (
-                user?.name
-              )}
-            </TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell
-              component="th"
-              scope="row"
-              sx={{ width: "30%", fontWeight: "bold" }}
-            >
-              Email
-            </TableCell>
-            <TableCell>
-              {isEditing ? (
-                <TextField
-                  fullWidth
-                  value={editedData.email}
-                  onChange={(e) =>
-                    setEditedData({ ...editedData, email: e.target.value })
-                  }
-                  error={!!emailError}
-                  helperText={emailError}
-                  required
-                  type="email"
-                />
-              ) : (
-                user?.email
-              )}
-            </TableCell>
-          </TableRow>
-          {userInfo.map(
-            (row) =>
-              row.value && (
-                <TableRow key={row.label}>
-                  <TableCell
-                    component="th"
-                    scope="row"
-                    sx={{ width: "30%", fontWeight: "bold" }}
-                  >
-                    {row.label}
-                  </TableCell>
-                  <TableCell>{row.value}</TableCell>
-                </TableRow>
-              )
-          )}
-        </TableBody>
-      </Table>
-    </TableContainer>
+    <form onSubmit={handleSubmit}>
+      <Grid container spacing={2}>
+        {/* Read-only fields */}
+        {userInfo.map(({ label, value }) => (
+          <Grid item xs={12} key={label}>
+            <TextField fullWidth label={label} value={value || ""} disabled />
+          </Grid>
+        ))}
+
+        {/* Editable fields */}
+        <Grid item xs={12}>
+          <TextField
+            fullWidth
+            label="Name"
+            value={formData?.name || ""}
+            onChange={handleChange("name")}
+            disabled={!isEditing}
+            error={!!nameError}
+            helperText={nameError}
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <TextField
+            fullWidth
+            label="Email"
+            value={formData?.email || ""}
+            onChange={handleChange("email")}
+            disabled={!isEditing}
+            error={!!emailError}
+            helperText={emailError}
+          />
+        </Grid>
+
+        {/* Save button only shows when editing */}
+        {isEditing && (
+          <Grid item xs={12}>
+            <Button type="submit" variant="contained" color="primary" fullWidth>
+              Save Changes
+            </Button>
+          </Grid>
+        )}
+      </Grid>
+    </form>
   );
-}
+});
 
 export default ProfileForm;

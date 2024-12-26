@@ -2,15 +2,10 @@ import {
   UPDATE_PROFILE_REQUEST,
   UPDATE_PROFILE_SUCCESS,
   UPDATE_PROFILE_FAILURE,
-  SET_PROFILE_EDITING,
   SET_PROFILE_DATA,
+  SET_PROFILE_EDITING,
 } from "./types";
 import { profileService } from "../services/profileService";
-
-export const setProfileEditing = (isEditing) => ({
-  type: SET_PROFILE_EDITING,
-  payload: isEditing,
-});
 
 export const setProfileData = (data) => ({
   type: SET_PROFILE_DATA,
@@ -35,3 +30,8 @@ export const updateProfile = (profileData) => async (dispatch) => {
     throw error;
   }
 };
+
+export const setProfileEditing = (isEditing) => ({
+  type: SET_PROFILE_EDITING,
+  payload: isEditing,
+});

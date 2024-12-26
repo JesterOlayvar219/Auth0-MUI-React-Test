@@ -1,12 +1,8 @@
-import React, { useEffect } from "react";
+import React, { useEffect, memo } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useDispatch, useSelector } from "react-redux";
 import { Container, Box } from "@mui/material";
-import {
-  setProfileEditing,
-  setProfileData,
-  updateProfile,
-} from "../../actions/profile";
+import { setProfileData } from "../../actions/profile";
 import ProfileHeader from "./ProfileHeader";
 import ProfileAvatar from "./ProfileAvatar";
 import ProfileForm from "./ProfileForm";
@@ -15,10 +11,15 @@ import LoadingSpinner from "./LoadingSpinner";
 import { profileService } from "../../services/profileService";
 import { setAuthToken } from "../../services/api";
 
+// Memoize static components
+const MemoizedProfileHeader = memo(ProfileHeader);
+const MemoizedProfileAvatar = memo(ProfileAvatar);
+const MemoizedServerMessage = memo(ServerMessage);
+
 function Profile() {
   const { user, getAccessTokenSilently } = useAuth0();
   const dispatch = useDispatch();
-  const { isEditing, userData, editedData, loading } = useSelector(
+  const { isEditing, userData, loading } = useSelector(
     (state) => state.profile
   );
 
@@ -33,34 +34,9 @@ function Profile() {
     }
   };
 
-  useEffect(
-    () => {
-      fetchUserData();
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [getAccessTokenSilently, dispatch]
-  );
-
-  const handleEdit = () => {
-    dispatch(setProfileEditing(true));
-  };
-
-  const handleSave = async () => {
-    try {
-      await dispatch(updateProfile(editedData));
-      dispatch(setProfileEditing(false));
-    } catch (error) {
-      console.error("Error saving profile:", error);
-    }
-  };
-
-  const handleCancel = () => {
-    dispatch(setProfileEditing(false));
-  };
-
-  const handleFormChange = (newData) => {
-    dispatch(setProfileData({ ...userData, user: newData }));
-  };
+  useEffect(() => {
+    fetchUserData();
+  }, [getAccessTokenSilently, dispatch]);
 
   if (loading) return <LoadingSpinner />;
 
@@ -72,24 +48,17 @@ function Profile() {
   return (
     <Container maxWidth="md">
       <Box sx={{ mt: 4, mb: 4 }}>
-        <ProfileHeader
-          isEditing={isEditing}
-          onEdit={handleEdit}
-          onSave={handleSave}
-          onCancel={handleCancel}
-        />
-        <ProfileAvatar
+        <MemoizedProfileHeader isEditing={isEditing} />
+        <MemoizedProfileAvatar
           picture={userData?.user?.picture || user?.picture}
           name={userData?.user?.name || user?.name}
         />
         <ProfileForm
           isEditing={isEditing}
-          user={userData?.user || user}
-          editedData={editedData}
-          setEditedData={handleFormChange}
+          initialData={userData?.user || user}
           userInfo={userInfo}
         />
-        <ServerMessage message={userData?.message} />
+        <MemoizedServerMessage message={userData?.message} />
       </Box>
     </Container>
   );

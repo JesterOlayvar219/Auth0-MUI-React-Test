@@ -2,19 +2,15 @@ import {
   UPDATE_PROFILE_REQUEST,
   UPDATE_PROFILE_SUCCESS,
   UPDATE_PROFILE_FAILURE,
-  SET_PROFILE_EDITING,
   SET_PROFILE_DATA,
+  SET_PROFILE_EDITING,
 } from "../actions/types";
 
 const initialState = {
-  isEditing: false,
+  userData: null,
   loading: false,
   error: null,
-  userData: null,
-  editedData: {
-    name: "",
-    email: "",
-  },
+  isEditing: false,
 };
 
 export default function profileReducer(state = initialState, action) {
